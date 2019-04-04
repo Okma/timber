@@ -31,6 +31,20 @@ class Timber private constructor() {
         return tag
       }
 
+    interface LogCallback {
+      fun echo(priority: Int, tag: String?, message: String, t: Throwable?)
+    }
+
+    protected val callbacks = ArrayList<LogCallback>()
+
+    open fun addEcho(logCallback: LogCallback) {
+      callbacks.add(logCallback)
+    }
+
+    open fun removeEcho(logCallback: LogCallback) {
+      callbacks.remove(logCallback)
+    }
+
     /** Log a verbose message with optional format args. */
     open fun v(message: String?, vararg args: Any?) {
       prepareLog(Log.VERBOSE, null, message, *args)
@@ -241,6 +255,7 @@ class Timber private constructor() {
         } else {
           Log.println(priority, tag, message)
         }
+        callbacks.forEach { it.echo(priority, tag, message, t) }
         return
       }
 
@@ -258,6 +273,7 @@ class Timber private constructor() {
           } else {
             Log.println(priority, tag, part)
           }
+          callbacks.forEach { it.echo(priority, tag, message, t) }
           i = end
         } while (i < newline)
         i++
